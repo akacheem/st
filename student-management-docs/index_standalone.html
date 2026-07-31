@@ -1,0 +1,1259 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sổ Quản Lý Điểm Rèn Luyện Học Sinh (100 Điểm Ban Đầu) - Google Docs</title>
+  <link rel="icon" type="image/svg+xml" href="https://ssl.gstatic.com/docs/documents/images/kix-favicon7.ico" />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Roboto+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <!-- React & Babel CDN for zero-setup execution -->
+  <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  <style>
+    :root {
+      --google-blue: #1a73e8;
+      --google-blue-hover: #1557b0;
+      --google-blue-light: #e8f0fe;
+      --google-blue-border: #d2e3fc;
+      
+      --bg-workspace: #f8f9fa;
+      --bg-surface: #ffffff;
+      --bg-hover: #f1f3f4;
+      --bg-selected: #e8f0fe;
+      
+      --text-primary: #202124;
+      --text-secondary: #5f6368;
+      --text-muted: #80868b;
+      
+      --border-light: #dadce0;
+      --border-subtle: #e8eaed;
+      
+      --shadow-paper: 0 1px 3px 0 rgba(60,64,67,0.15), 0 4px 8px 3px rgba(60,64,67,0.05);
+      --shadow-modal: 0 4px 16px rgba(0,0,0,0.2);
+
+      --font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      --font-mono: 'Roboto Mono', monospace;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: var(--font-family);
+      background-color: var(--bg-workspace);
+      color: var(--text-primary);
+      line-height: 1.5;
+      font-size: 14px;
+      overflow-x: hidden;
+    }
+
+    button, input, select, textarea { font-family: inherit; font-size: inherit; }
+
+    .app-container { display: flex; flex-direction: column; height: 100vh; width: 100vw; overflow: hidden; }
+
+    /* Docs Header */
+    .docs-header {
+      background: var(--bg-surface);
+      border-bottom: 1px solid var(--border-subtle);
+      padding: 8px 16px 4px 16px;
+      display: flex; align-items: center; justify-content: space-between;
+      user-select: none;
+    }
+    .docs-header-left { display: flex; align-items: center; gap: 12px; }
+    .docs-logo {
+      width: 36px; height: 36px; display: flex; align-items: center; justify-content: center;
+      background: var(--google-blue-light); border-radius: 8px; color: var(--google-blue); font-weight: bold;
+    }
+    .docs-title-block { display: flex; flex-direction: column; }
+    .docs-title-row { display: flex; align-items: center; gap: 8px; }
+    .docs-title-input {
+      font-size: 18px; font-weight: 500; color: var(--text-primary);
+      border: 1px solid transparent; border-radius: 4px; padding: 2px 6px; background: transparent; outline: none;
+    }
+    .docs-title-input:hover, .docs-title-input:focus { border-color: var(--border-light); background: var(--bg-hover); }
+    .saved-badge { display: flex; align-items: center; gap: 4px; font-size: 12px; color: var(--text-muted); }
+    
+    .docs-menu-bar { display: flex; align-items: center; gap: 4px; margin-top: 2px; }
+    .menu-item { padding: 2px 8px; font-size: 13px; color: var(--text-secondary); border-radius: 4px; cursor: pointer; }
+    .menu-item:hover { background: var(--bg-hover); color: var(--text-primary); }
+
+    .docs-header-right { display: flex; align-items: center; gap: 12px; }
+    .btn-pill-blue {
+      display: flex; align-items: center; gap: 6px; background: var(--google-blue); color: #fff;
+      border: none; border-radius: 20px; padding: 8px 18px; font-weight: 500; font-size: 13px; cursor: pointer;
+    }
+    .btn-pill-blue:hover { background: var(--google-blue-hover); }
+    .avatar-circle { width: 32px; height: 32px; border-radius: 50%; background: #34a853; color: white; display: flex; align-items: center; justify-content: center; font-weight: 600; }
+
+    /* Toolbar */
+    .docs-toolbar {
+      background: #edf2fc; border-bottom: 1px solid var(--border-subtle);
+      padding: 6px 16px; display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap;
+    }
+    .toolbar-group { display: flex; align-items: center; gap: 8px; }
+    .toolbar-divider { width: 1px; height: 20px; background-color: #c7c7c7; margin: 0 4px; }
+    .toolbar-btn {
+      background: transparent; border: 1px solid transparent; border-radius: 4px;
+      padding: 6px 10px; display: flex; align-items: center; gap: 6px; cursor: pointer;
+      color: var(--text-secondary); font-size: 13px; font-weight: 500;
+    }
+    .toolbar-btn:hover { background: rgba(0,0,0,0.06); color: var(--text-primary); }
+    .toolbar-btn.active { background: var(--google-blue-light); color: var(--google-blue); border-color: var(--google-blue-border); }
+
+    /* Grade Tabs */
+    .grade-tabs { display: flex; background: rgba(255,255,255,0.7); padding: 3px; border-radius: 8px; border: 1px solid var(--border-light); }
+    .grade-tab-btn {
+      padding: 5px 14px; border: none; background: transparent; border-radius: 6px;
+      font-size: 13px; font-weight: 500; color: var(--text-secondary); cursor: pointer;
+    }
+    .grade-tab-btn.active { background: var(--bg-surface); color: var(--google-blue); font-weight: 600; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+
+    /* Class Chips */
+    .class-chip-container { display: flex; align-items: center; gap: 6px; }
+    .class-chip {
+      padding: 4px 12px; border-radius: 16px; font-size: 12px; font-weight: 500;
+      border: 1px solid var(--border-light); background: var(--bg-surface); color: var(--text-secondary); cursor: pointer;
+    }
+    .class-chip:hover { border-color: var(--google-blue); color: var(--google-blue); }
+    .class-chip.active { background: var(--google-blue); color: #fff; border-color: var(--google-blue); }
+
+    /* Search Box */
+    .docs-search-box {
+      display: flex; align-items: center; background: var(--bg-surface);
+      border: 1px solid var(--border-light); border-radius: 8px; padding: 4px 10px; width: 220px;
+    }
+    .docs-search-box input { border: none; outline: none; background: transparent; width: 100%; font-size: 13px; padding-left: 6px; }
+
+    /* Main Workspace */
+    .main-workspace { display: flex; flex: 1; overflow: hidden; }
+
+    /* Sidebar */
+    .docs-sidebar {
+      width: 250px; background: var(--bg-surface); border-right: 1px solid var(--border-subtle);
+      display: flex; flex-direction: column;
+    }
+    .sidebar-header {
+      padding: 14px 16px; font-weight: 600; font-size: 12px; color: var(--text-secondary);
+      letter-spacing: 0.5px; text-transform: uppercase; border-bottom: 1px solid var(--border-subtle);
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    .sidebar-tree { flex: 1; overflow-y: auto; padding: 12px 8px; }
+    .tree-grade-group { margin-bottom: 12px; }
+    .tree-grade-title {
+      display: flex; align-items: center; justify-content: space-between; padding: 6px 8px;
+      font-weight: 600; font-size: 13px; color: var(--text-primary); border-radius: 4px; cursor: pointer;
+    }
+    .tree-grade-title:hover { background: var(--bg-hover); }
+    .tree-class-list { padding-left: 16px; display: flex; flex-direction: column; gap: 2px; margin-top: 4px; }
+    .tree-class-item {
+      display: flex; align-items: center; justify-content: space-between; padding: 6px 10px;
+      font-size: 13px; border-radius: 6px; color: var(--text-secondary); cursor: pointer;
+    }
+    .tree-class-item:hover { background: var(--bg-hover); color: var(--text-primary); }
+    .tree-class-item.active { background: var(--google-blue-light); color: var(--google-blue); font-weight: 600; }
+    .count-badge { font-size: 11px; padding: 2px 6px; border-radius: 10px; background: rgba(0,0,0,0.06); color: var(--text-secondary); }
+
+    .sidebar-stats { padding: 16px; background: var(--bg-workspace); border-top: 1px solid var(--border-subtle); font-size: 12px; }
+    .stat-row { display: flex; justify-content: space-between; margin-bottom: 6px; color: var(--text-secondary); }
+
+    /* Canvas Page */
+    .document-canvas-container {
+      flex: 1; background: var(--bg-workspace); overflow-y: auto; padding: 24px 32px;
+      display: flex; flex-direction: column; align-items: center;
+    }
+    .doc-page {
+      background: var(--bg-surface); width: 100%; max-width: 1040px; min-height: 900px;
+      box-shadow: var(--shadow-paper); border-radius: 4px; padding: 44px 52px; margin-bottom: 48px;
+      display: flex; flex-direction: column;
+    }
+    .doc-page-header { border-bottom: 2px solid var(--text-primary); padding-bottom: 16px; margin-bottom: 24px; }
+    .school-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 16px; }
+    .school-info h4 { font-size: 13px; font-weight: 600; text-transform: uppercase; color: var(--text-secondary); }
+    .school-info h3 { font-size: 15px; font-weight: 700; color: var(--text-primary); }
+    .doc-meta { text-align: right; font-size: 12px; color: var(--text-secondary); }
+    .doc-main-title { text-align: center; margin: 12px 0 6px 0; }
+    .doc-main-title h1 { font-size: 22px; font-weight: 700; color: var(--text-primary); letter-spacing: 0.5px; text-transform: uppercase; }
+    .doc-sub-info { display: flex; justify-content: center; gap: 24px; font-size: 13px; color: var(--text-secondary); font-weight: 500; }
+
+    /* Table */
+    .docs-table { width: 100%; border-collapse: collapse; font-size: 13px; text-align: left; margin-top: 16px; }
+    .docs-table th { background: #f8f9fa; color: var(--text-secondary); font-weight: 600; border: 1px solid var(--border-light); padding: 10px 12px; }
+    .docs-table td { border: 1px solid var(--border-light); padding: 10px 12px; color: var(--text-primary); vertical-align: middle; }
+    .docs-table tbody tr:nth-child(even) { background-color: #fafafa; }
+    .docs-table tbody tr:hover { background-color: var(--google-blue-light); }
+
+    .std-code { font-family: var(--font-mono); font-size: 12px; color: var(--text-secondary); }
+    .std-name { font-weight: 600; color: var(--text-primary); }
+
+    /* Badges */
+    .badge { display: inline-flex; align-items: center; padding: 3px 8px; border-radius: 12px; font-size: 11px; font-weight: 600; }
+    .badge-xuatsac { background-color: #e6f4ea; color: #137333; }
+    .badge-gioi { background-color: #e8f0fe; color: #1a73e8; }
+    .badge-kha { background-color: #fef7e0; color: #b06000; }
+    .badge-trungbinh { background-color: #fce8e6; color: #c5221f; }
+
+    .icon-action-btn { background: transparent; border: none; color: var(--text-secondary); padding: 4px; border-radius: 4px; cursor: pointer; }
+    .icon-action-btn:hover { background: rgba(0,0,0,0.08); color: var(--text-primary); }
+    .icon-action-btn.delete:hover { background: #fce8e6; color: #c5221f; }
+
+    .doc-page-footer { margin-top: auto; padding-top: 32px; display: flex; justify-content: space-between; font-size: 12px; color: var(--text-secondary); text-align: center; }
+    .signature-space { height: 50px; }
+
+    /* Modal Backdrop Fix */
+    .modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(32, 33, 36, 0.4); display: flex; align-items: center; justify-content: center; z-index: 1000; }
+    .modal-content { background: var(--bg-surface); border-radius: 8px; width: 100%; max-width: 560px; box-shadow: var(--shadow-modal); display: flex; flex-direction: column; }
+    .modal-header { padding: 16px 20px; border-bottom: 1px solid var(--border-subtle); display: flex; align-items: center; justify-content: space-between; }
+    .modal-body { padding: 20px; display: flex; flex-direction: column; gap: 14px; max-height: 75vh; overflow-y: auto; }
+    .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    .form-group { display: flex; flex-direction: column; gap: 4px; }
+    .form-group.full { grid-column: span 2; }
+    .form-group label { font-size: 12px; font-weight: 600; color: var(--text-secondary); }
+    .form-input, .form-select, .form-textarea { padding: 8px 10px; border: 1px solid var(--border-light); border-radius: 6px; font-size: 13px; outline: none; }
+    .modal-footer { padding: 12px 20px; border-top: 1px solid var(--border-subtle); display: flex; justify-content: flex-end; gap: 10px; background: #f8f9fa; }
+    .btn-secondary { padding: 8px 16px; border: 1px solid var(--border-light); background: #fff; border-radius: 6px; cursor: pointer; }
+    .btn-primary { padding: 8px 16px; border: none; background: var(--google-blue); color: #fff; border-radius: 6px; cursor: pointer; font-weight: 500; }
+
+    /* Clean Print CSS */
+    @media print {
+      body { background: #fff !important; color: #000 !important; font-size: 12pt !important; }
+      .docs-header, .docs-toolbar, .docs-sidebar, .action-btn-group, .btn-primary, .btn-secondary, .btn-pill-blue, .toolbar-btn, .icon-action-btn, .saved-badge, .modal-header button, .modal-footer {
+        display: none !important;
+      }
+      .app-container, .main-workspace, .document-canvas-container {
+        height: auto !important; overflow: visible !important; padding: 0 !important; margin: 0 !important; background: #fff !important; display: block !important;
+      }
+      .doc-page { box-shadow: none !important; border: none !important; width: 100% !important; max-width: 100% !important; padding: 0 !important; margin: 0 !important; min-height: auto !important; }
+      .modal-overlay { position: static !important; background: #fff !important; display: block !important; }
+      .modal-content { box-shadow: none !important; border: none !important; max-width: 100% !important; width: 100% !important; background: #fff !important; }
+      .docs-table th { background-color: #f0f0f0 !important; color: #000 !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    }
+  </style>
+</head>
+<body>
+  <div id="root"></div>
+
+  <script type="text/babel">
+    const { useState, useEffect } = React;
+
+    const INITIAL_GRADES = [
+      { id: 10, name: 'Khối 10' },
+      { id: 11, name: 'Khối 11' },
+      { id: 12, name: 'Khối 12' }
+    ];
+
+    const INITIAL_CLASSES = [
+      { id: '10A1', grade: 10, name: 'Lớp 10A1', headTeacher: 'Cô Nguyễn Thị Hoa', room: 'Phòng 101' },
+      { id: '10A2', grade: 10, name: 'Lớp 10A2', headTeacher: 'Thầy Trần Văn Nam', room: 'Phòng 102' },
+      { id: '10A3', grade: 10, name: 'Lớp 10A3', headTeacher: 'Cô Lê Thị Mai', room: 'Phòng 103' },
+      { id: '11A1', grade: 11, name: 'Lớp 11A1', headTeacher: 'Thầy Phạm Quốc Bảo', room: 'Phòng 201' },
+      { id: '11A2', grade: 11, name: 'Lớp 11A2', headTeacher: 'Cô Đặng Thùy Dương', room: 'Phòng 202' },
+      { id: '12A1', grade: 12, name: 'Lớp 12A1', headTeacher: 'Cô Bùi Thanh Hương', room: 'Phòng 301' }
+    ];
+
+    const MOCK_GOOD = [
+      { title: 'Nhặt được của rơi trả lại người mất', points: 5 },
+      { title: 'Ban cán sự / Lớp trưởng gương mẫu hoàn thành nhiệm vụ', points: 10 },
+      { title: 'Tích cực tham gia hoạt động Đoàn Thanh niên', points: 5 },
+      { title: 'Giúp đỡ bạn cùng tiến trong học tập', points: 5 },
+      { title: 'Vệ sinh lớp học sạch đẹp xuất sắc', points: 5 }
+    ];
+
+    const MOCK_BAD = [
+      { title: 'Đi học muộn không có lý do', points: -5 },
+      { title: 'Quên đồng phục / Không đeo thẻ học sinh', points: -5 },
+      { title: 'Không làm bài tập về nhà / Chưa chuẩn bị bài', points: -10 },
+      { title: 'Sử dụng điện thoại trong giờ học không phép', points: -10 },
+      { title: 'Mất trật tự trong giờ học', points: -15 },
+      { title: 'Nghỉ học không phép', points: -20 }
+    ];
+
+    function calculateRating(score) {
+      if (score >= 90) return 'Tốt';
+      if (score >= 75) return 'Khá';
+      if (score >= 50) return 'Đạt';
+      return 'Chưa đạt';
+    }
+
+    const INITIAL_STUDENTS = [
+      {
+        id: 'HS1001', code: '202510001', name: 'Nguyễn Văn An', gender: 'Nam', dob: '2010-03-15', grade: 10, className: '10A1',
+        baseScore: 100,
+        behaviorLogs: [
+          { id: 'LOG1', date: '2025-10-05', type: 'BONUS', title: 'Ban cán sự lớp trưởng gương mẫu', note: 'Phát động thành công tuần học tốt', points: 10 },
+          { id: 'LOG2', date: '2025-10-12', type: 'BONUS', title: 'Nhặt được của rơi trả lại người mất', note: 'Trả lại ví tiền nhặt tại sân trường', points: 5 }
+        ],
+        teacherComment: 'Cực kỳ gương mẫu, đạo đức xuất sắc, là chỗ dựa tin cậy của tập thể 10A1.'
+      },
+      {
+        id: 'HS1002', code: '202510002', name: 'Trần Thị Bình', gender: 'Nữ', dob: '2010-07-22', grade: 10, className: '10A1',
+        baseScore: 100,
+        behaviorLogs: [
+          { id: 'LOG3', date: '2025-10-08', type: 'BONUS', title: 'Tích cực tham gia hoạt động Đoàn Thanh niên', note: 'Trưởng ban văn nghệ', points: 5 }
+        ],
+        teacherComment: 'Năng nổ, nhiệt tình trong các hoạt động phong trào rèn luyện đạo đức.'
+      },
+      {
+        id: 'HS1003', code: '202510003', name: 'Lê Hoàng Cường', gender: 'Nam', dob: '2010-01-10', grade: 10, className: '10A1',
+        baseScore: 100,
+        behaviorLogs: [
+          { id: 'LOG4', date: '2025-10-02', type: 'BONUS', title: 'Đạt thành tích xuất sắc hội thao', note: 'Đội trưởng bóng rổ', points: 10 },
+          { id: 'LOG5', date: '2025-10-14', type: 'PENALTY', title: 'Đi học muộn không có lý do', note: 'Muộn 10 phút đầu tuần', points: -5 }
+        ],
+        teacherComment: 'Tinh thần tập thể cao, chú ý nâng cao chuyên cần đúng giờ.'
+      },
+      {
+        id: 'HS1004', code: '202510004', name: 'Phạm Minh Dung', gender: 'Nữ', dob: '2010-09-05', grade: 10, className: '10A1',
+        baseScore: 100,
+        behaviorLogs: [
+          { id: 'LOG6', date: '2025-10-03', type: 'PENALTY', title: 'Đi học muộn không có lý do', note: '', points: -5 },
+          { id: 'LOG7', date: '2025-10-11', type: 'PENALTY', title: 'Quên đồng phục', note: '', points: -5 },
+          { id: 'LOG8', date: '2025-10-18', type: 'PENALTY', title: 'Không làm bài tập về nhà', note: '', points: -10 }
+        ],
+        teacherComment: 'Ngoan ngoãn nhưng cần nghiêm túc hơn trong rèn luyện chuyên cần.'
+      }
+    ];
+
+    function App() {
+      const [docTitle, setDocTitle] = useState('Sổ Quản Lý Điểm Rèn Luyện Học Sinh (Khởi Điểm 100 Điểm)');
+      const [grades] = useState(INITIAL_GRADES);
+      const [classes, setClasses] = useState(() => {
+        const saved = localStorage.getItem('gdocs_score_classes');
+        return saved ? JSON.parse(saved) : INITIAL_CLASSES;
+      });
+      const [students, setStudents] = useState(() => {
+        const saved = localStorage.getItem('gdocs_score_students');
+        return saved ? JSON.parse(saved) : INITIAL_STUDENTS;
+      });
+
+      const [activeGrade, setActiveGrade] = useState(10);
+      const [activeClassId, setActiveClassId] = useState('10A1');
+
+      const [searchQuery, setSearchQuery] = useState('');
+      const [conductFilter, setConductFilter] = useState('ALL');
+      const [sidebarOpen, setSidebarOpen] = useState(true);
+
+      const [isStudentModalOpen, setIsStudentModalOpen] = useState(false);
+      const [editingStudent, setEditingStudent] = useState(null);
+
+      // Behavior Action (+ / -) Modal
+      const [isActionModalOpen, setIsActionModalOpen] = useState(false);
+      const [actionType, setActionType] = useState('BONUS');
+      const [targetStudent, setTargetStudent] = useState(null);
+
+      // Log History Modal
+      const [isLogModalOpen, setIsLogModalOpen] = useState(false);
+      const [logStudent, setLogStudent] = useState(null);
+
+      // Print Sheet Modal
+      const [isTranscriptOpen, setIsTranscriptOpen] = useState(false);
+      const [transcriptStudent, setTranscriptStudent] = useState(null);
+
+      const [isAddClassModalOpen, setIsAddClassModalOpen] = useState(false);
+
+      useEffect(() => { localStorage.setItem('gdocs_score_classes', JSON.stringify(classes)); }, [classes]);
+      useEffect(() => { localStorage.setItem('gdocs_score_students', JSON.stringify(students)); }, [students]);
+
+      const activeClass = classes.find(c => c.id === activeClassId);
+
+      const handleSaveStudent = (data) => {
+        if (data.id) {
+          setStudents(prev => prev.map(s => s.id === data.id ? data : s));
+        } else {
+          setStudents(prev => [{
+            ...data,
+            id: 'HS' + Date.now(),
+            baseScore: 100,
+            behaviorLogs: [],
+            teacherComment: 'Học sinh có ý thức rèn luyện đạo đức tốt.'
+          }, ...prev]);
+        }
+      };
+
+      const handleAddBehaviorLog = (studentId, newLog) => {
+        setStudents(prev => prev.map(s => {
+          if (s.id === studentId) {
+            return { ...s, behaviorLogs: [...(s.behaviorLogs || []), newLog] };
+          }
+          return s;
+        }));
+      };
+
+      const handleDeleteBehaviorLog = (studentId, logId) => {
+        setStudents(prev => prev.map(s => {
+          if (s.id === studentId) {
+            return { ...s, behaviorLogs: (s.behaviorLogs || []).filter(l => l.id !== logId) };
+          }
+          return s;
+        }));
+      };
+
+      const handleDeleteStudent = (id) => {
+        if (confirm('Bạn có chắc chắn muốn xóa học sinh này?')) {
+          setStudents(prev => prev.filter(s => s.id !== id));
+        }
+      };
+
+      const handleAddClass = (newCls) => {
+        setClasses(prev => [...prev, newCls]);
+        setActiveGrade(newCls.grade);
+        setActiveClassId(newCls.id);
+      };
+
+      // 1. Export Excel (.xls) with full formatting, colors, and 100% Vietnamese UTF-8 encoding
+      const handleExportExcel = () => {
+        const list = students.filter(s => s.grade === activeGrade && s.className === activeClassId);
+        if (list.length === 0) return alert('Không có học sinh nào trong lớp này để xuất dữ liệu.');
+
+        let tableHtml = `
+          <html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="http://www.w3.org/TR/REC-html40">
+          <head>
+            <meta charset="UTF-8">
+            <!--[if gte mso 9]>
+            <xml>
+              <x:ExcelWorkbook>
+                <x:ExcelWorksheets>
+                  <x:ExcelWorksheet>
+                    <x:Name>Điểm Rèn Luyện ${activeClassId}</x:Name>
+                    <x:WorksheetOptions><x:DisplayGridlines/></x:WorksheetOptions>
+                  </x:ExcelWorksheet>
+                </x:ExcelWorksheets>
+              </x:ExcelWorkbook>
+            </xml>
+            <![endif]-->
+            <style>
+              table { border-collapse: collapse; font-family: Arial, sans-serif; font-size: 13px; }
+              th { background-color: #1a73e8; color: #ffffff; border: 1px solid #cccccc; padding: 10px; font-weight: bold; }
+              td { border: 1px solid #cccccc; padding: 8px; }
+              .title { font-size: 18px; font-weight: bold; color: #1a73e8; text-align: center; }
+            </style>
+          </head>
+          <body>
+            <h2 class="title">BẢNG QUẢN LÝ ĐIỂM RÈN LUYỆN - LỚP ${activeClassId}</h2>
+            <p style="text-align: center; color: #555;">Năm học 2025-2026 | Khởi điểm 100 điểm ban đầu</p>
+            <table>
+              <thead>
+                <tr>
+                  <th>STT</th>
+                  <th>Mã Học Sinh</th>
+                  <th>Họ và Tên</th>
+                  <th>Giới tính</th>
+                  <th>Ngày sinh</th>
+                  <th>Lớp</th>
+                  <th>Điểm Ban Đầu</th>
+                  <th>Tổng Điểm Hiện Tại</th>
+                  <th>Xếp Loại Hạnh Kiểm</th>
+                  <th>Lượt Cộng Điểm (+)</th>
+                  <th>Lượt Trừ Điểm (-)</th>
+                  <th>Hành Vi Mới Nhất</th>
+                  <th>Ghi Chú Chi Tiết</th>
+                  <th>Nhận Xét GVCN</th>
+                </tr>
+              </thead>
+              <tbody>
+        `;
+
+        list.forEach((s, idx) => {
+          const logs = s.behaviorLogs || [];
+          const bonus = logs.filter(l => l.type === 'BONUS').reduce((a, c) => a + c.points, 0);
+          const penalty = logs.filter(l => l.type === 'PENALTY').reduce((a, c) => a + Math.abs(c.points), 0);
+          const score = Math.max(0, (s.baseScore || 100) + bonus - penalty);
+          const rating = calculateRating(score);
+          const latestLog = logs.length > 0 ? logs[logs.length - 1] : null;
+
+          tableHtml += `
+            <tr>
+              <td style="text-align:center;">${idx + 1}</td>
+              <td>${s.code}</td>
+              <td><b>${s.name}</b></td>
+              <td style="text-align:center;">${s.gender}</td>
+              <td style="text-align:center;">${s.dob}</td>
+              <td style="text-align:center;">${s.className}</td>
+              <td style="text-align:center;">100</td>
+              <td style="text-align:center; font-weight:bold; color:${score>=90?'#137333':'#1a73e8'};">${score}</td>
+              <td style="text-align:center; font-weight:bold;">${rating}</td>
+              <td style="text-align:center; color:#137333;">+${bonus}đ</td>
+              <td style="text-align:center; color:#c5221f;">-${penalty}đ</td>
+              <td>${latestLog ? `${latestLog.title} (${latestLog.points>0?`+${latestLog.points}`:latestLog.points}đ)` : 'Giữ 100đ ban đầu'}</td>
+              <td>${latestLog && latestLog.note ? latestLog.note : '—'}</td>
+              <td>${s.teacherComment || ''}</td>
+            </tr>
+          `;
+        });
+
+        tableHtml += `</tbody></table></body></html>`;
+
+        const blob = new Blob([tableHtml], { type: 'application/vnd.ms-excel;charset=utf-8' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `Bang_Diem_Ren_Luyen_${activeClassId}_2025-2026.xls`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+      };
+
+      // 2. Export CSV (.csv) with UTF-8 BOM
+      const handleExportCSV = () => {
+        const list = students.filter(s => s.grade === activeGrade && s.className === activeClassId);
+        if (list.length === 0) return alert('Không có học sinh nào trong lớp này để xuất dữ liệu.');
+
+        let csv = "\uFEFFSTT,Mã Học Sinh,Họ và Tên,Giới tính,Ngày sinh,Lớp,Điểm Ban Đầu,Tổng Điểm Hiện Tại,Xếp Loại Hạnh Kiểm,Lượt Cộng (+),Lượt Trừ (-),Hành Vi Mới Nhất,Ghi Chú Chi Tiết,Nhận Xét GVCN\n";
+        list.forEach((s, idx) => {
+          const logs = s.behaviorLogs || [];
+          const bonus = logs.filter(l => l.type === 'BONUS').reduce((a, c) => a + c.points, 0);
+          const penalty = logs.filter(l => l.type === 'PENALTY').reduce((a, c) => a + Math.abs(c.points), 0);
+          const score = Math.max(0, (s.baseScore || 100) + bonus - penalty);
+          const rating = calculateRating(score);
+          const latestLog = logs.length > 0 ? logs[logs.length - 1] : null;
+
+          const latestTitle = latestLog ? `${latestLog.title} (${latestLog.points>0?`+${latestLog.points}`:latestLog.points}đ)` : 'Giữ 100đ ban đầu';
+          const latestNote = latestLog && latestLog.note ? latestLog.note : '';
+
+          csv += `${idx + 1},"${s.code}","${s.name}","${s.gender}","${s.dob}","${s.className}",100,${score},"${rating}","+${bonus}đ","-${penalty}đ","${latestTitle}","${latestNote}","${s.teacherComment || ''}"\n`;
+        });
+        const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(blob);
+        a.download = `So_diem_ren_luyen_${activeClassId}_2025-2026.csv`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+      };
+
+      const filteredStudents = students.filter(s => {
+        if (s.grade !== activeGrade) return false;
+        if (activeClass && s.className !== activeClass.id) return false;
+        
+        const logs = s.behaviorLogs || [];
+        const bonus = logs.filter(l => l.type === 'BONUS').reduce((a, c) => a + c.points, 0);
+        const penalty = logs.filter(l => l.type === 'PENALTY').reduce((a, c) => a + Math.abs(c.points), 0);
+        const score = Math.max(0, (s.baseScore || 100) + bonus - penalty);
+        const rating = calculateRating(score);
+
+        if (conductFilter !== 'ALL' && rating !== conductFilter) return false;
+        if (searchQuery) {
+          const q = searchQuery.toLowerCase();
+          return s.name.toLowerCase().includes(q) || s.code.toLowerCase().includes(q);
+        }
+        return true;
+      });
+
+      return (
+        <div className="app-container">
+          {/* Header */}
+          <header className="docs-header">
+            <div className="docs-header-left">
+              <div className="docs-logo">💯</div>
+              <div className="docs-title-block">
+                <div className="docs-title-row">
+                  <input
+                    type="text"
+                    className="docs-title-input"
+                    value={docTitle}
+                    onChange={(e) => setDocTitle(e.target.value)}
+                  />
+                  <div className="saved-badge">☁️ Đã lưu tự động</div>
+                </div>
+                <div className="docs-menu-bar">
+                  <span className="menu-item" onClick={() => window.print()}>🖨️ In sổ điểm</span>
+                  <span className="menu-item" onClick={handleExportExcel}>📊 Xuất Excel (.xls)</span>
+                  <span className="menu-item" onClick={handleExportCSV}>📄 Xuất CSV (.csv)</span>
+                  <span className="menu-item">Chỉnh sửa</span>
+                  <span className="menu-item">Trợ giúp</span>
+                </div>
+              </div>
+            </div>
+            <div className="docs-header-right">
+              <button className="btn-pill-blue">🔒 Chia sẻ</button>
+              <div className="avatar-circle">A</div>
+            </div>
+          </header>
+
+          {/* Toolbar */}
+          <div className="docs-toolbar">
+            <div className="toolbar-group">
+              <button className="toolbar-btn" onClick={() => setSidebarOpen(!sidebarOpen)}>
+                📁 Danh mục Lớp
+              </button>
+
+              <div className="toolbar-divider" />
+
+              {/* Grade Tabs */}
+              <div className="grade-tabs">
+                {grades.map(g => (
+                  <button
+                    key={g.id}
+                    className={`grade-tab-btn ${activeGrade === g.id ? 'active' : ''}`}
+                    onClick={() => {
+                      setActiveGrade(g.id);
+                      const firstCls = classes.find(c => c.grade === g.id);
+                      if (firstCls) setActiveClassId(firstCls.id);
+                    }}
+                  >
+                    {g.name}
+                  </button>
+                ))}
+              </div>
+
+              <div className="toolbar-divider" />
+
+              {/* Class Chips */}
+              <div className="class-chip-container">
+                {classes.filter(c => c.grade === activeGrade).map(cls => (
+                  <button
+                    key={cls.id}
+                    className={`class-chip ${activeClassId === cls.id ? 'active' : ''}`}
+                    onClick={() => setActiveClassId(cls.id)}
+                  >
+                    {cls.name}
+                  </button>
+                ))}
+                <button
+                  className="class-chip"
+                  style={{ borderStyle: 'dashed' }}
+                  onClick={() => setIsAddClassModalOpen(true)}
+                >
+                  + Tạo lớp
+                </button>
+              </div>
+            </div>
+
+            <div className="toolbar-group">
+              <div className="docs-search-box">
+                🔍
+                <input
+                  type="text"
+                  placeholder="Tìm học sinh..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                />
+              </div>
+
+              <select
+                className="form-select"
+                style={{ fontSize: 12, padding: '4px 8px' }}
+                value={conductFilter}
+                onChange={(e) => setConductFilter(e.target.value)}
+              >
+                <option value="ALL">Tất cả điểm rèn luyện</option>
+                <option value="Tốt">HK Tốt (≥ 90đ)</option>
+                <option value="Khá">HK Khá (75 - 89đ)</option>
+                <option value="Đạt">HK Đạt (50 - 74đ)</option>
+                <option value="Chưa đạt">HK Chưa đạt (&lt; 50đ)</option>
+              </select>
+
+              <button
+                className="btn-primary"
+                onClick={() => { setEditingStudent(null); setIsStudentModalOpen(true); }}
+              >
+                + Thêm Học Sinh
+              </button>
+            </div>
+          </div>
+
+          {/* Main Workspace */}
+          <div className="main-workspace">
+            {sidebarOpen && (
+              <aside className="docs-sidebar">
+                <div className="sidebar-header">
+                  <span>Khối & Lớp Học</span>
+                  <button className="icon-action-btn" onClick={() => setIsAddClassModalOpen(true)}>+</button>
+                </div>
+                <div className="sidebar-tree">
+                  {grades.map(g => (
+                    <div key={g.id} className="tree-grade-group">
+                      <div
+                        className="tree-grade-title"
+                        onClick={() => {
+                          setActiveGrade(g.id);
+                          const firstCls = classes.find(c => c.grade === g.id);
+                          if (firstCls) setActiveClassId(firstCls.id);
+                        }}
+                      >
+                        <span>📂 {g.name}</span>
+                        <span className="count-badge">
+                          {students.filter(s => s.grade === g.id).length} HS
+                        </span>
+                      </div>
+                      <div className="tree-class-list">
+                        {classes.filter(c => c.grade === g.id).map(cls => (
+                          <div
+                            key={cls.id}
+                            className={`tree-class-item ${activeClassId === cls.id ? 'active' : ''}`}
+                            onClick={() => { setActiveGrade(g.id); setActiveClassId(cls.id); }}
+                          >
+                            <span>🎓 {cls.name}</span>
+                            <span className="count-badge">
+                              {students.filter(s => s.className === cls.id).length}
+                            </span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+
+                <div className="sidebar-stats">
+                  <strong>Thống kê rèn luyện:</strong>
+                  <div className="stat-row"><span>Khởi điểm:</span><strong>100 điểm</strong></div>
+                  <div className="stat-row"><span>Tổng số HS:</span><strong>{students.length}</strong></div>
+                  <div className="stat-row"><span>HK Tốt (≥90đ):</span><strong style={{color:'#137333'}}>{students.filter(s=>{
+                    const logs = s.behaviorLogs || [];
+                    const bonus = logs.filter(l => l.type === 'BONUS').reduce((a, c) => a + c.points, 0);
+                    const penalty = logs.filter(l => l.type === 'PENALTY').reduce((a, c) => a + Math.abs(c.points), 0);
+                    return ((s.baseScore || 100) + bonus - penalty) >= 90;
+                  }).length}</strong></div>
+                </div>
+              </aside>
+            )}
+
+            {/* Paper Document Canvas */}
+            <div className="document-canvas-container">
+              <div className="doc-page">
+                <div className="doc-page-header">
+                  <div className="school-header">
+                    <div className="school-info">
+                      <h4>SỞ GIÁO DỤC VÀ ĐÀO TẠO</h4>
+                      <h3>TRƯỜNG THPT AN PHÚ</h3>
+                    </div>
+                    <div className="doc-meta">
+                      <p><strong>CỘNG HÒA XÃ HỘI CHỦ NGHĨA VIỆT NAM</strong></p>
+                      <p style={{ fontStyle: 'italic' }}>Độc lập - Tự do - Hạnh phúc</p>
+                    </div>
+                  </div>
+
+                  <div className="doc-main-title">
+                    <h1>SỔ QUẢN LÝ ĐIỂM RÈN LUYỆN {activeClass ? activeClass.name.toUpperCase() : `KHỐI ${activeGrade}`}</h1>
+                    <p style={{ fontStyle: 'italic', fontSize: 13 }}>Năm học 2025 - 2026 (Khởi điểm 100 điểm ban đầu)</p>
+                  </div>
+
+                  {activeClass && (
+                    <div className="doc-sub-info">
+                      <span><strong>GVCN:</strong> </span>
+                      <span>•</span>
+                      <span><strong>Phòng học:</strong> {activeClass.room}</span>
+                      <span>•</span>
+                      <span><strong>Sĩ số:</strong> {filteredStudents.length} học sinh</span>
+                    </div>
+                  )}
+                </div>
+
+                <table className="docs-table">
+                  <thead>
+                    <tr>
+                      <th style={{ width: 36, textAlign: 'center' }}>STT</th>
+                      <th style={{ width: 95 }}>Mã HS</th>
+                      <th>Họ và Tên</th>
+                      <th style={{ width: 65, textAlign: 'center' }}>Ban đầu</th>
+                      <th style={{ width: 110, textAlign: 'center' }}>Điểm Hiện Tại</th>
+                      <th style={{ width: 85, textAlign: 'center' }}>Xếp Loại</th>
+                      <th>Hành vi rèn luyện mới nhất</th>
+                      <th style={{ width: 140, textAlign: 'center' }}>Thao tác Điểm</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {filteredStudents.map((s, idx) => {
+                      const logs = s.behaviorLogs || [];
+                      const bonus = logs.filter(l => l.type === 'BONUS').reduce((a, c) => a + c.points, 0);
+                      const penalty = logs.filter(l => l.type === 'PENALTY').reduce((a, c) => a + Math.abs(c.points), 0);
+                      const totalScore = Math.max(0, (s.baseScore || 100) + bonus - penalty);
+                      const rating = calculateRating(totalScore);
+                      const latestLog = logs.length > 0 ? logs[logs.length - 1] : null;
+
+                      return (
+                        <tr key={s.id}>
+                          <td style={{ textAlign: 'center' }}>{idx + 1}</td>
+                          <td><span className="std-code">{s.code}</span></td>
+                          <td>
+                            <span className="std-name">{s.name}</span>
+                            <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>{s.gender} • {s.dob}</div>
+                          </td>
+                          <td style={{ textAlign: 'center', color: 'var(--text-muted)' }}>100 đ</td>
+                          <td style={{ textAlign: 'center' }}>
+                            <span style={{
+                              padding: '3px 10px',
+                              borderRadius: 14,
+                              fontWeight: 'bold',
+                              background: totalScore>=90?'#e6f4ea':totalScore>=75?'#e8f0fe':'#fce8e6',
+                              color: totalScore>=90?'#137333':totalScore>=75?'#1a73e8':'#c5221f'
+                            }}>
+                              {totalScore} đ
+                            </span>
+                          </td>
+                          <td style={{ textAlign: 'center' }}>
+                            <span className={`badge ${rating==='Tốt'?'badge-xuatsac':rating==='Khá'?'badge-gioi':'badge-trungbinh'}`}>
+                              {rating}
+                            </span>
+                          </td>
+                          <td style={{ fontSize: 12 }}>
+                            {latestLog ? (
+                              <span style={{ color: latestLog.type==='BONUS'?'#137333':'#c5221f' }}>
+                                {latestLog.type==='BONUS'?'➕ ':'➖ '} {latestLog.title} (<strong>{latestLog.points>0?`+${latestLog.points}`:latestLog.points}đ</strong>)
+                                {latestLog.note && <span style={{ color: 'var(--text-muted)', fontStyle: 'italic', marginLeft: 4 }}>— {latestLog.note}</span>}
+                              </span>
+                            ) : (
+                              <span style={{ color: 'var(--text-muted)', fontStyle: 'italic' }}>Giữ 100 điểm ban đầu</span>
+                            )}
+                          </td>
+                          <td style={{ textAlign: 'center' }}>
+                            <button className="icon-action-btn" style={{ color: '#137333' }} title="+ Cộng điểm" onClick={() => { setTargetStudent(s); setActionType('BONUS'); setIsActionModalOpen(true); }}>➕</button>
+                            <button className="icon-action-btn" style={{ color: '#c5221f' }} title="- Trừ điểm" onClick={() => { setTargetStudent(s); setActionType('PENALTY'); setIsActionModalOpen(true); }}>➖</button>
+                            <button className="icon-action-btn" style={{ color: '#1a73e8' }} title="Xem nhật ký điểm" onClick={() => { setLogStudent(s); setIsLogModalOpen(true); }}>📜</button>
+                            <button className="icon-action-btn" title="In Phiếu A4" onClick={() => { setTranscriptStudent(s); setIsTranscriptOpen(true); }}>🖨️</button>
+                            <button className="icon-action-btn delete" title="Xóa" onClick={() => handleDeleteStudent(s.id)}>🗑️</button>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+
+                <div className="doc-page-footer">
+                  <div>
+                    <p><strong>NGƯỜI LẬP SỔ</strong></p>
+                    <div className="signature-space"></div>
+                    <p>Văn phòng nhà trường</p>
+                  </div>
+                  <div>
+                    <p><strong>GIÁO VIÊN CHỦ NHIỆM</strong></p>
+                    <div className="signature-space"></div>
+                    <p></p>
+                  </div>
+                  <div>
+                    <p><strong>HIỆU TRƯỜNG</strong></p>
+                    <div className="signature-space"></div>
+                    <p></p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Behavior Action (+ / -) Modal */}
+          {isActionModalOpen && (
+            <BehaviorActionModalModal
+              type={actionType}
+              student={targetStudent}
+              onClose={() => setIsActionModalOpen(false)}
+              onAddLog={handleAddBehaviorLog}
+            />
+          )}
+
+          {/* Behavior History Log Modal */}
+          {isLogModalOpen && (
+            <BehaviorLogModalModal
+              student={students.find(s => s.id === logStudent.id)}
+              onClose={() => setIsLogModalOpen(false)}
+              onDeleteLog={handleDeleteBehaviorLog}
+              onOpenAddBonus={(std) => { setTargetStudent(std); setActionType('BONUS'); setIsActionModalOpen(true); }}
+              onOpenAddPenalty={(std) => { setTargetStudent(std); setActionType('PENALTY'); setIsActionModalOpen(true); }}
+              onOpenPrint={(std) => { setTranscriptStudent(std); setIsTranscriptOpen(true); }}
+            />
+          )}
+
+          {/* Printable A4 Sheet Modal */}
+          {isTranscriptOpen && (
+            <TranscriptModalModal
+              student={students.find(s => s.id === transcriptStudent.id)}
+              activeClass={activeClass}
+              onClose={() => setIsTranscriptOpen(false)}
+            />
+          )}
+
+          {/* Add Student Modal */}
+          {isStudentModalOpen && (
+            <StudentModalModal
+              student={editingStudent}
+              currentGrade={activeGrade}
+              currentClassId={activeClassId}
+              classes={classes}
+              onClose={() => setIsStudentModalOpen(false)}
+              onSave={handleSaveStudent}
+            />
+          )}
+
+          {/* Add Class Modal */}
+          {isAddClassModalOpen && (
+            <AddClassModalModal
+              currentGrade={activeGrade}
+              onClose={() => setIsAddClassModalOpen(false)}
+              onAdd={handleAddClass}
+            />
+          )}
+        </div>
+      );
+    }
+
+    // Behavior Action Modal Component with Fixed Points & Note Field & Backdrop Protection
+    function BehaviorActionModalModal({ type, student, onClose, onAddLog }) {
+      const catalog = type === 'BONUS' ? MOCK_GOOD : MOCK_BAD;
+      const [selectedBehavior, setSelectedBehavior] = useState(catalog[0].title);
+      const [customTitle, setCustomTitle] = useState('');
+      const [note, setNote] = useState('');
+      const [points, setPoints] = useState(catalog[0].points);
+
+      const isCustom = selectedBehavior === 'OTHER';
+
+      const handleSelect = (e) => {
+        const val = e.target.value;
+        setSelectedBehavior(val);
+        if (val === 'OTHER') {
+          setCustomTitle('');
+          setPoints(type === 'BONUS' ? 5 : -5);
+        } else {
+          const found = catalog.find(b => b.title === val);
+          if (found) setPoints(found.points);
+        }
+      };
+
+      const handleSubmit = (e) => {
+        e.preventDefault();
+        const finalTitle = isCustom ? customTitle.trim() : selectedBehavior;
+        if (!finalTitle) return alert('Vui lòng chọn hoặc nhập tên hành vi');
+
+        const pDelta = type === 'BONUS' ? Math.abs(Number(points)) : -Math.abs(Number(points));
+        onAddLog(student.id, {
+          id: 'LOG_' + Date.now(),
+          date: new Date().toISOString().split('T')[0],
+          type,
+          title: finalTitle,
+          note: note.trim(),
+          points: pDelta,
+          loggedBy: 'GVCN'
+        });
+        onClose();
+      };
+
+      return (
+        <div className="modal-overlay">
+          <div className="modal-content">
+            <div className="modal-header">
+              <h3>{type === 'BONUS' ? '➕ Ghi Nhận Hành Vi Tốt (+ Điểm)' : '➖ Ghi Nhận Vi Phạm (- Điểm)'} — {student.name}</h3>
+              <button className="icon-action-btn" type="button" onClick={onClose}>✕</button>
+            </div>
+            <form onSubmit={handleSubmit}>
+              <div className="modal-body">
+                <div className="form-group">
+                  <label>1. Chọn Danh Mục Hành Vi Rèn Luyện</label>
+                  <select className="form-select" value={selectedBehavior} onChange={handleSelect}>
+                    {catalog.map((b, i) => (
+                      <option key={i} value={b.title}>{b.title} ({b.points > 0 ? `+${b.points}` : `${b.points}`}đ)</option>
+                    ))}
+                    <option value="OTHER">✨ Hành vi Khác (Tự nhập nội dung & tự nhập điểm)...</option>
+                  </select>
+                </div>
+
+                {isCustom && (
+                  <div className="form-group" style={{ background: '#f8f9fa', padding: 10, borderRadius: 6 }}>
+                    <label style={{ color: '#1a73e8' }}>Tên hành vi tùy chỉnh *</label>
+                    <input className="form-input" placeholder="Nhập tên hành vi..." value={customTitle} onChange={e=>setCustomTitle(e.target.value)} required={isCustom} />
+                  </div>
+                )}
+
+                {/* Middle Field: Note / Details */}
+                <div className="form-group">
+                  <label>2. Ghi Chú Chi Tiết / Lý Do Hành Vi (Tùy chọn)</label>
+                  <input
+                    className="form-input"
+                    placeholder="Ví dụ: Nhặt được ví tiền tại sân trường lúc 9h30..."
+                    value={note}
+                    onChange={e=>setNote(e.target.value)}
+                  />
+                </div>
+
+                {/* Points Field */}
+                <div className="form-group">
+                  <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                    <label>3. Số Điểm Rèn Luyện ({type === 'BONUS' ? 'Cộng' : 'Trừ'})</label>
+                    {!isCustom ? (
+                      <span style={{ fontSize: 11, color: 'var(--text-muted)' }}>🔒 Điểm cố định theo danh mục</span>
+                    ) : (
+                      <span style={{ fontSize: 11, color: '#1a73e8', fontWeight: 'bold' }}>✏️ Cho phép tự nhập điểm</span>
+                    )}
+                  </div>
+                  <input
+                    type="number"
+                    min="1"
+                    max="50"
+                    className="form-input"
+                    value={Math.abs(points)}
+                    disabled={!isCustom}
+                    style={{
+                      background: !isCustom ? '#f1f3f4' : '#fff',
+                      cursor: !isCustom ? 'not-allowed' : 'text',
+                      fontWeight: 'bold',
+                      color: type === 'BONUS' ? '#137333' : '#c5221f'
+                    }}
+                    onChange={e => setPoints(type === 'BONUS' ? Math.abs(Number(e.target.value)) : -Math.abs(Number(e.target.value)))}
+                    required
+                  />
+                </div>
+              </div>
+              <div className="modal-footer">
+                <button type="button" className="btn-secondary" onClick={onClose}>Hủy</button>
+                <button type="submit" className="btn-primary" style={{ background: type === 'BONUS' ? '#137333' : '#c5221f' }}>
+                  Xác Nhận {type === 'BONUS' ? '+ Cộng Điểm' : '- Trừ Điểm'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      );
+    }
+
+    // Behavior History Log Modal Component
+    function BehaviorLogModalModal({ student, onClose, onDeleteLog, onOpenAddBonus, onOpenAddPenalty, onOpenPrint }) {
+      const logs = student.behaviorLogs || [];
+      const bonus = logs.filter(l => l.type === 'BONUS').reduce((a, c) => a + c.points, 0);
+      const penalty = logs.filter(l => l.type === 'PENALTY').reduce((a, c) => a + Math.abs(c.points), 0);
+      const totalScore = Math.max(0, 100 + bonus - penalty);
+      const rating = calculateRating(totalScore);
+
+      return (
+        <div className="modal-overlay" style={{ zIndex: 1100 }}>
+          <div className="modal-content" style={{ maxWidth: 720, width: '90%' }}>
+            <div className="modal-header">
+              <h3>📜 Sổ Nhật Ký Điểm Rèn Luyện & Ghi Chú — {student.name} ({student.code})</h3>
+              <button className="icon-action-btn" type="button" onClick={onClose}>✕</button>
+            </div>
+            <div className="modal-body">
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 10, background: '#f8f9fa', padding: 12, borderRadius: 6, textAlign: 'center' }}>
+                <div><div style={{ fontSize: 11 }}>Ban đầu</div><strong>100 đ</strong></div>
+                <div><div style={{ fontSize: 11, color: '#137333' }}>Tổng cộng (+)</div><strong style={{ color: '#137333' }}>+{bonus} đ</strong></div>
+                <div><div style={{ fontSize: 11, color: '#c5221f' }}>Tổng trừ (-)</div><strong style={{ color: '#c5221f' }}>-{penalty} đ</strong></div>
+                <div><div style={{ fontSize: 11, color: '#1a73e8' }}>Điểm hiện tại</div><strong style={{ color: '#1a73e8' }}>{totalScore} đ ({rating})</strong></div>
+              </div>
+
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <strong>Lịch sử rèn luyện ({logs.length} lượt):</strong>
+                <div style={{ display: 'flex', gap: 6 }}>
+                  <button className="btn-secondary" style={{ color: '#137333', fontSize: 12 }} onClick={() => onOpenAddBonus(student)}>+ Cộng điểm</button>
+                  <button className="btn-secondary" style={{ color: '#c5221f', fontSize: 12 }} onClick={() => onOpenAddPenalty(student)}>- Trừ điểm</button>
+                </div>
+              </div>
+
+              {logs.length === 0 ? (
+                <div style={{ padding: 20, textAlign: 'center', color: 'var(--text-muted)' }}>Chưa có lượt cộng / trừ điểm (Giữ 100 điểm ban đầu).</div>
+              ) : (
+                <table className="docs-table">
+                  <thead>
+                    <tr>
+                      <th style={{ width: 85 }}>Ngày ghi</th>
+                      <th>Nội dung hành vi</th>
+                      <th>Ghi chú chi tiết / Lý do</th>
+                      <th style={{ width: 75, textAlign: 'center' }}>Điểm</th>
+                      <th style={{ width: 40, textAlign: 'center' }}>Xóa</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {logs.map(l => (
+                      <tr key={l.id}>
+                        <td style={{ fontSize: 12 }}>{l.date}</td>
+                        <td style={{ color: l.type==='BONUS'?'#137333':'#c5221f', fontWeight: 500 }}>
+                          {l.type==='BONUS'?'➕ ':'➖ '} {l.title}
+                        </td>
+                        <td style={{ fontSize: 12, fontStyle: 'italic', color: 'var(--text-secondary)' }}>
+                          {l.note || '—'}
+                        </td>
+                        <td style={{ textAlign: 'center', fontWeight: 'bold', color: l.type==='BONUS'?'#137333':'#c5221f' }}>
+                          {l.points > 0 ? `+${l.points}` : `${l.points}`}
+                        </td>
+                        <td style={{ textAlign: 'center' }}>
+                          <button className="icon-action-btn delete" onClick={() => onDeleteLog(student.id, l.id)}>🗑️</button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              )}
+            </div>
+            <div className="modal-footer">
+              <button className="btn-secondary" onClick={() => onOpenPrint(student)}>🖨️ In Phiếu A4</button>
+              <button className="btn-primary" onClick={onClose}>Đóng</button>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    // Individual Printable A4 Sheet Modal Component
+    function TranscriptModalModal({ student, activeClass, onClose }) {
+      const logs = student.behaviorLogs || [];
+      const bonus = logs.filter(l => l.type === 'BONUS').reduce((a, c) => a + c.points, 0);
+      const penalty = logs.filter(l => l.type === 'PENALTY').reduce((a, c) => a + Math.abs(c.points), 0);
+      const totalScore = Math.max(0, 100 + bonus - penalty);
+      const rating = calculateRating(totalScore);
+
+      return (
+        <div className="modal-overlay" style={{ zIndex: 1200 }}>
+          <div className="modal-content" style={{ maxWidth: 840, width: '90%', maxHeight: '90vh', padding: 16 }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 12 }}>
+              <h3>Phiếu Đánh Giá Điểm Rèn Luyện (100 Điểm Ban Đầu)</h3>
+              <div style={{ display: 'flex', gap: 8 }}>
+                <button className="btn-primary" onClick={() => window.print()}>🖨️ In Phiếu A4</button>
+                <button className="icon-action-btn" type="button" onClick={onClose}>✕</button>
+              </div>
+            </div>
+            <div style={{ overflowY: 'auto' }}>
+              <div className="doc-page" style={{ margin: '0 auto', boxShadow: 'none', borderWidth: 1, minHeight: 'auto', padding: '36px 44px' }}>
+                <div className="doc-page-header">
+                  <div className="school-header">
+                    <div className="school-info">
+                      <h4>SỞ GIÁO DỤC VÀ ĐÀO TẠO</h4>
+                      <h3>TRƯỜNG THPT AN PHÚ</h3>
+                    </div>
+                    <div className="doc-meta">
+                      <p><strong>CỘNG HÒA XÃ HỘI CHỦ NGHĨA VIỆT NAM</strong></p>
+                      <p style={{ fontStyle: 'italic' }}>Độc lập - Tự do - Hạnh phúc</p>
+                    </div>
+                  </div>
+                  <div className="doc-main-title">
+                    <h1>PHIẾU ĐÁNH GIÁ ĐIỂM RÈN LUYỆN & ĐẠO ĐỨC HỌC SINH</h1>
+                    <p style={{ fontStyle: 'italic', fontSize: 13 }}>Năm học 2025 - 2026</p>
+                  </div>
+                </div>
+
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px 24px', background: '#f8f9fa', padding: 14, borderRadius: 6, marginBottom: 16 }}>
+                  <div><strong>Họ và tên:</strong> <span style={{ color: '#1a73e8', fontWeight: 'bold' }}>{student.name}</span></div>
+                  <div><strong>Mã HS:</strong> {student.code}</div>
+                  <div><strong>Lớp:</strong> {student.className} (Khối {student.grade})</div>
+                  <div><strong>Điểm Khởi Điểm:</strong> 100 điểm</div>
+                  <div><strong>Tổng Điểm Hiện Tại:</strong> <span style={{ fontSize: 16, fontWeight: 'bold', color: '#137333' }}>{totalScore} điểm</span></div>
+                  <div><strong>Xếp loại Hạnh kiểm:</strong> <span className="badge badge-xuatsac">{rating}</span></div>
+                </div>
+
+                <h4 style={{ fontSize: 13, marginBottom: 8 }}>I. NHẬT KÝ CHI TIẾT BIẾN ĐỘNG ĐIỂM RÈN LUYỆN</h4>
+                {logs.length === 0 ? (
+                  <div style={{ padding: 14, textAlign: 'center', background: '#fff', border: '1px solid var(--border-light)', borderRadius: 6, marginBottom: 16, fontStyle: 'italic' }}>
+                    Chưa có lượt cộng / trừ điểm. Giữ nguyên 100 điểm rèn luyện ban đầu.
+                  </div>
+                ) : (
+                  <table className="docs-table" style={{ marginBottom: 16 }}>
+                    <thead>
+                      <tr>
+                        <th style={{ width: 36 }}>STT</th>
+                        <th style={{ width: 90 }}>Ngày ghi</th>
+                        <th>Nội dung hành vi rèn luyện</th>
+                        <th>Ghi chú chi tiết / Lý do</th>
+                        <th style={{ width: 80, textAlign: 'center' }}>Số điểm</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {logs.map((l, i) => (
+                        <tr key={l.id}>
+                          <td>{i + 1}</td>
+                          <td>{l.date}</td>
+                          <td style={{ color: l.type==='BONUS'?'#137333':'#c5221f', fontWeight: 500 }}>
+                            {l.type==='BONUS'?'➕ ':'➖ '} {l.title}
+                          </td>
+                          <td style={{ fontSize: 12, fontStyle: 'italic' }}>{l.note || '—'}</td>
+                          <td style={{ textAlign: 'center', fontWeight: 'bold', color: l.type==='BONUS'?'#137333':'#c5221f' }}>
+                            {l.points > 0 ? `+${l.points}` : `${l.points}`}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                )}
+
+                <h4 style={{ fontSize: 13, marginBottom: 6 }}>II. NHẬN XÉT ĐÁNH GIÁ CỦA GIÁO VIÊN CHỦ NHIỆM</h4>
+                <div style={{ background: '#f8f9fa', padding: 12, borderRadius: 6, fontStyle: 'italic', marginBottom: 20 }}>
+                  "{student.teacherComment || 'Học sinh có ý thức tự giác rèn luyện đạo đức tốt.'}"
+                </div>
+
+                <div className="doc-page-footer">
+                  <div><p><strong>PHỤ HUYNH HỌC SINH</strong></p><div className="signature-space"></div></div>
+                  <div><p><strong>GIÁO VIÊN CHỦ NHIỆM</strong></p><div className="signature-space"></div><p></p></div>
+                  <div><p><strong>HIỆU TRƯỜNG</strong></p><div className="signature-space"></div><p></p></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    function StudentModalModal({ student, currentGrade, currentClassId, classes, onClose, onSave }) {
+      const [formData, setFormData] = useState(student || {
+        code: '2025' + currentGrade + Math.floor(1000 + Math.random() * 9000),
+        name: '', gender: 'Nam', dob: '2010-01-01', grade: currentGrade, className: currentClassId
+      });
+
+      const handleSubmit = (e) => {
+        e.preventDefault();
+        if (!formData.name) return alert('Vui lòng nhập tên');
+        onSave(formData);
+        onClose();
+      };
+
+      return (
+        <div className="modal-overlay">
+          <div className="modal-content">
+            <div className="modal-header">
+              <h3>{student ? 'Sửa Thông Tin Học Sinh' : 'Thêm Học Sinh Mới'}</h3>
+              <button className="icon-action-btn" type="button" onClick={onClose}>✕</button>
+            </div>
+            <form onSubmit={handleSubmit}>
+              <div className="modal-body">
+                <div className="form-grid">
+                  <div className="form-group"><label>Mã HS</label><input className="form-input" value={formData.code} onChange={e=>setFormData({...formData, code: e.target.value})} required/></div>
+                  <div className="form-group"><label>Họ và Tên</label><input className="form-input" value={formData.name} onChange={e=>setFormData({...formData, name: e.target.value})} required/></div>
+                </div>
+                <div className="form-grid">
+                  <div className="form-group">
+                    <label>Giới tính</label>
+                    <select className="form-select" value={formData.gender} onChange={e=>setFormData({...formData, gender: e.target.value})}>
+                      <option value="Nam">Nam</option>
+                      <option value="Nữ">Nữ</option>
+                    </select>
+                  </div>
+                  <div className="form-group"><label>Ngày sinh</label><input type="date" className="form-input" value={formData.dob} onChange={e=>setFormData({...formData, dob: e.target.value})}/></div>
+                </div>
+              </div>
+              <div className="modal-footer">
+                <button type="button" className="btn-secondary" onClick={onClose}>Hủy</button>
+                <button type="submit" className="btn-primary">Lưu</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      );
+    }
+
+    function AddClassModalModal({ currentGrade, onClose, onAdd }) {
+      const [className, setClassName] = useState(`${currentGrade}A4`);
+      const [headTeacher, setHeadTeacher] = useState('Thầy Nguyễn Văn Nam');
+
+      const handleSubmit = (e) => {
+        e.preventDefault();
+        onAdd({ id: className, grade: Number(currentGrade), name: `Lớp ${className}`, headTeacher, room: 'Phòng 104' });
+        onClose();
+      };
+
+      return (
+        <div className="modal-overlay">
+          <div className="modal-content">
+            <div className="modal-header">
+              <h3>Tạo Lớp Học Mới</h3>
+              <button className="icon-action-btn" type="button" onClick={onClose}>✕</button>
+            </div>
+            <form onSubmit={handleSubmit}>
+              <div className="modal-body">
+                <div className="form-group"><label>Tên Lớp (Mã Lớp)</label><input className="form-input" value={className} onChange={e=>setClassName(e.target.value)} required/></div>
+                <div className="form-group"><label>Giáo Viên Chủ Nhiệm</label><input className="form-input" value={headTeacher} onChange={e=>setHeadTeacher(e.target.value)}/></div>
+              </div>
+              <div className="modal-footer">
+                <button type="button" className="btn-secondary" onClick={onClose}>Hủy</button>
+                <button type="submit" className="btn-primary">Tạo Lớp</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      );
+    }
+
+    ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+  </script>
+</body>
+</html>
