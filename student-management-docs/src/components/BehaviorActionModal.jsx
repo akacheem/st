@@ -16,6 +16,7 @@ export default function BehaviorActionModal({
   const [customTitle, setCustomTitle] = useState('');
   const [note, setNote] = useState('');
   const [points, setPoints] = useState(5);
+  const [pointsInput, setPointsInput] = useState('5');
 
   useEffect(() => {
     setType(defaultType);
@@ -23,6 +24,7 @@ export default function BehaviorActionModal({
     if (catalog.length > 0) {
       setSelectedBehavior(catalog[0].title);
       setPoints(catalog[0].points);
+      setPointsInput(String(Math.abs(catalog[0].points)));
     }
     setCustomTitle('');
     setNote('');
@@ -38,10 +40,12 @@ export default function BehaviorActionModal({
     if (val === 'OTHER') {
       setCustomTitle('');
       setPoints(type === 'BONUS' ? 5 : -5);
+      setPointsInput('5');
     } else {
       const found = catalog.find(b => b.title === val);
       if (found) {
         setPoints(found.points);
+        setPointsInput(String(Math.abs(found.points)));
       }
     }
   };
@@ -51,8 +55,25 @@ export default function BehaviorActionModal({
     const newCatalog = newType === 'BONUS' ? MOCK_GOOD_BEHAVIORS : MOCK_BAD_BEHAVIORS;
     setSelectedBehavior(newCatalog[0].title);
     setPoints(newCatalog[0].points);
+    setPointsInput(String(Math.abs(newCatalog[0].points)));
     setCustomTitle('');
     setNote('');
+  };
+
+  const handleCustomPointsChange = (e) => {
+    const val = e.target.value;
+    // Allow empty string so user can clear input completely without sticking 0
+    if (val === '') {
+      setPointsInput('');
+      return;
+    }
+    // Strict numeric validation (only allow positive digits)
+    if (/^\d*$/.test(val)) {
+      const parsed = parseInt(val, 10);
+      if (!isNaN(parsed) && parsed <= 100) {
+        setPointsInput(parsed === 0 ? '0' : String(parsed));
+      }
+    }
   };
 
   // Calculate current score & preview score
@@ -61,7 +82,7 @@ export default function BehaviorActionModal({
   const currentPenalty = logs.filter(l => l.type === 'PENALTY').reduce((acc, curr) => acc + Math.abs(curr.points), 0);
   const currentTotal = (student.baseScore || 100) + currentBonus - currentPenalty;
 
-  const activePoints = Math.abs(Number(points)) || 0;
+  const activePoints = isCustom ? (parseInt(pointsInput, 10) || 0) : Math.abs(Number(points));
   const pointDelta = type === 'BONUS' ? activePoints : -activePoints;
   const previewScore = Math.max(0, currentTotal + pointDelta);
   const previewRating = calculateConductRating(previewScore);
@@ -73,6 +94,14 @@ export default function BehaviorActionModal({
     if (!finalTitle) {
       alert('Vui lòng chọn hoặc nhập tên hành vi rèn luyện!');
       return;
+    }
+
+    if (isCustom) {
+      const parsedPoints = parseInt(pointsInput, 10);
+      if (isNaN(parsedPoints) || parsedPoints <= 0) {
+        alert('Vui lòng nhập số điểm rèn luyện hợp lệ (là số nguyên lớn hơn 0)!');
+        return;
+      }
     }
 
     const newLog = {
@@ -194,12 +223,12 @@ export default function BehaviorActionModal({
               </div>
 
               <input
-                type="number"
+                type="text"
+                inputMode="numeric"
                 className="form-input"
-                min="1"
-                max="50"
-                value={Math.abs(points)}
+                value={isCustom ? pointsInput : Math.abs(points)}
                 disabled={!isCustom}
+                placeholder="Nhập số điểm..."
                 style={{
                   background: !isCustom ? '#f1f3f4' : '#fff',
                   cursor: !isCustom ? 'not-allowed' : 'text',
@@ -207,7 +236,7 @@ export default function BehaviorActionModal({
                   fontSize: 15,
                   color: type === 'BONUS' ? '#137333' : '#c5221f'
                 }}
-                onChange={(e) => setPoints(type === 'BONUS' ? Math.abs(Number(e.target.value)) : -Math.abs(Number(e.target.value)))}
+                onChange={handleCustomPointsChange}
                 required
               />
             </div>
