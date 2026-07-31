@@ -331,6 +331,7 @@
 
       const [searchQuery, setSearchQuery] = useState('');
       const [conductFilter, setConductFilter] = useState('ALL');
+      const [expandedGrades, setExpandedGrades] = useState({ 10: true, 11: true, 12: true });
       const [sidebarOpen, setSidebarOpen] = useState(true);
 
       const [isStudentModalOpen, setIsStudentModalOpen] = useState(false);
@@ -661,37 +662,47 @@
                   <button className="icon-action-btn" onClick={() => setIsAddClassModalOpen(true)}>+</button>
                 </div>
                 <div className="sidebar-tree">
-                  {grades.map(g => (
-                    <div key={g.id} className="tree-grade-group">
-                      <div
-                        className="tree-grade-title"
-                        onClick={() => {
-                          setActiveGrade(g.id);
-                          const firstCls = classes.find(c => c.grade === g.id);
-                          if (firstCls) setActiveClassId(firstCls.id);
-                        }}
-                      >
-                        <span>📂 {g.name}</span>
-                        <span className="count-badge">
-                          {students.filter(s => s.grade === g.id).length} HS
-                        </span>
-                      </div>
-                      <div className="tree-class-list">
-                        {classes.filter(c => c.grade === g.id).map(cls => (
-                          <div
-                            key={cls.id}
-                            className={`tree-class-item ${activeClassId === cls.id ? 'active' : ''}`}
-                            onClick={() => { setActiveGrade(g.id); setActiveClassId(cls.id); }}
-                          >
-                            <span>🎓 {cls.name}</span>
-                            <span className="count-badge">
-                              {students.filter(s => s.className === cls.id).length}
-                            </span>
+                  {grades.map(g => {
+                    const isExpanded = expandedGrades[g.id] !== false;
+                    return (
+                      <div key={g.id} className="tree-grade-group">
+                        <div
+                          className="tree-grade-title"
+                          onClick={() => {
+                            setExpandedGrades(prev => ({ ...prev, [g.id]: !isExpanded }));
+                            setActiveGrade(g.id);
+                            const firstCls = classes.find(c => c.grade === g.id);
+                            if (firstCls && !isExpanded) setActiveClassId(firstCls.id);
+                          }}
+                          style={{ cursor: 'pointer', userSelect: 'none' }}
+                        >
+                          <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+                            <span style={{ fontSize: 10 }}>{isExpanded ? '▼' : '▶'}</span>
+                            <span>{isExpanded ? '📂' : '📁'} {g.name}</span>
+                          </span>
+                          <span className="count-badge">
+                            {students.filter(s => s.grade === g.id).length} HS
+                          </span>
+                        </div>
+                        {isExpanded && (
+                          <div className="tree-class-list">
+                            {classes.filter(c => c.grade === g.id).map(cls => (
+                              <div
+                                key={cls.id}
+                                className={`tree-class-item ${activeClassId === cls.id ? 'active' : ''}`}
+                                onClick={() => { setActiveGrade(g.id); setActiveClassId(cls.id); }}
+                              >
+                                <span>🎓 {cls.name}</span>
+                                <span className="count-badge">
+                                  {students.filter(s => s.className === cls.id).length}
+                                </span>
+                              </div>
+                            ))}
                           </div>
-                        ))}
+                        )}
                       </div>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
 
                 <div className="sidebar-stats">
@@ -892,6 +903,7 @@
       const [customTitle, setCustomTitle] = useState('');
       const [note, setNote] = useState('');
       const [points, setPoints] = useState(catalog[0].points);
+      const [pointsInput, setPointsInput] = useState(String(Math.abs(catalog[0].points)));
 
       const isCustom = selectedBehavior === 'OTHER';
 
@@ -901,9 +913,27 @@
         if (val === 'OTHER') {
           setCustomTitle('');
           setPoints(type === 'BONUS' ? 5 : -5);
+          setPointsInput('5');
         } else {
           const found = catalog.find(b => b.title === val);
-          if (found) setPoints(found.points);
+          if (found) {
+            setPoints(found.points);
+            setPointsInput(String(Math.abs(found.points)));
+          }
+        }
+      };
+
+      const handlePointsChange = (e) => {
+        const val = e.target.value;
+        if (val === '') {
+          setPointsInput('');
+          return;
+        }
+        if (/^\d*$/.test(val)) {
+          const parsed = parseInt(val, 10);
+          if (!isNaN(parsed) && parsed <= 100) {
+            setPointsInput(parsed === 0 ? '0' : String(parsed));
+          }
         }
       };
 
@@ -912,7 +942,16 @@
         const finalTitle = isCustom ? customTitle.trim() : selectedBehavior;
         if (!finalTitle) return alert('Vui lòng chọn hoặc nhập tên hành vi');
 
-        const pDelta = type === 'BONUS' ? Math.abs(Number(points)) : -Math.abs(Number(points));
+        let activeP = Math.abs(Number(points));
+        if (isCustom) {
+          const parsedP = parseInt(pointsInput, 10);
+          if (isNaN(parsedP) || parsedP <= 0) {
+            return alert('Vui lòng nhập số điểm rèn luyện hợp lệ (là số nguyên lớn hơn 0)!');
+          }
+          activeP = parsedP;
+        }
+
+        const pDelta = type === 'BONUS' ? activeP : -activeP;
         onAddLog(student.id, {
           id: 'LOG_' + Date.now(),
           date: new Date().toISOString().split('T')[0],
@@ -973,19 +1012,19 @@
                     )}
                   </div>
                   <input
-                    type="number"
-                    min="1"
-                    max="50"
+                    type="text"
+                    inputMode="numeric"
                     className="form-input"
-                    value={Math.abs(points)}
+                    value={isCustom ? pointsInput : Math.abs(points)}
                     disabled={!isCustom}
+                    placeholder="Nhập số điểm..."
                     style={{
                       background: !isCustom ? '#f1f3f4' : '#fff',
                       cursor: !isCustom ? 'not-allowed' : 'text',
                       fontWeight: 'bold',
                       color: type === 'BONUS' ? '#137333' : '#c5221f'
                     }}
-                    onChange={e => setPoints(type === 'BONUS' ? Math.abs(Number(e.target.value)) : -Math.abs(Number(e.target.value)))}
+                    onChange={handlePointsChange}
                     required
                   />
                 </div>
