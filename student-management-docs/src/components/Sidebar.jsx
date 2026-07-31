@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { 
   Folder, 
   FolderOpen, 
@@ -22,7 +22,16 @@ export default function Sidebar({
   setActiveClassId,
   onOpenAddClass
 }) {
+  const [expandedGrades, setExpandedGrades] = useState({ 10: true, 11: true, 12: true });
+
   if (!isOpen) return null;
+
+  const toggleGrade = (gradeId) => {
+    setExpandedGrades(prev => ({
+      ...prev,
+      [gradeId]: !prev[gradeId]
+    }));
+  };
 
   // Calculate totals
   const totalStudents = students.length;
@@ -46,52 +55,56 @@ export default function Sidebar({
       <div className="sidebar-tree">
         {grades.map(grade => {
           const gradeClasses = classes.filter(c => c.grade === grade.id);
-          const isGradeActive = activeGrade === grade.id;
+          const isExpanded = expandedGrades[grade.id] !== false;
 
           return (
             <div key={grade.id} className="tree-grade-group">
               <div 
                 className="tree-grade-title"
                 onClick={() => {
+                  toggleGrade(grade.id);
                   setActiveGrade(grade.id);
-                  if (gradeClasses.length > 0) {
+                  if (gradeClasses.length > 0 && !isExpanded) {
                     setActiveClassId(gradeClasses[0].id);
                   }
                 }}
+                style={{ cursor: 'pointer', userSelect: 'none' }}
               >
-                {isGradeActive ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
-                {isGradeActive ? <FolderOpen size={16} color="#1a73e8" /> : <Folder size={16} color="#5f6368" />}
+                {isExpanded ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
+                {isExpanded ? <FolderOpen size={16} color="#1a73e8" /> : <Folder size={16} color="#5f6368" />}
                 <span>{grade.name}</span>
                 <span className="count-badge" style={{ marginLeft: 'auto' }}>
                   {students.filter(s => s.grade === grade.id).length} HS
                 </span>
               </div>
 
-              <div className="tree-class-list">
-                {gradeClasses.map(cls => {
-                  const classStudentCount = students.filter(s => s.className === cls.id).length;
-                  const isSelected = activeClassId === cls.id;
+              {isExpanded && (
+                <div className="tree-class-list">
+                  {gradeClasses.map(cls => {
+                    const classStudentCount = students.filter(s => s.className === cls.id).length;
+                    const isSelected = activeClassId === cls.id;
 
-                  return (
-                    <div
-                      key={cls.id}
-                      className={`tree-class-item ${isSelected ? 'active' : ''}`}
-                      onClick={() => {
-                        setActiveGrade(grade.id);
-                        setActiveClassId(cls.id);
-                      }}
-                    >
-                      <span style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                        <GraduationCap size={14} color={isSelected ? "#1a73e8" : "#80868b"} />
-                        <span>{cls.name}</span>
-                      </span>
-                      <span className="count-badge">
-                        {classStudentCount} HS
-                      </span>
-                    </div>
-                  );
-                })}
-              </div>
+                    return (
+                      <div
+                        key={cls.id}
+                        className={`tree-class-item ${isSelected ? 'active' : ''}`}
+                        onClick={() => {
+                          setActiveGrade(grade.id);
+                          setActiveClassId(cls.id);
+                        }}
+                      >
+                        <span style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                          <GraduationCap size={14} color={isSelected ? "#1a73e8" : "#80868b"} />
+                          <span>{cls.name}</span>
+                        </span>
+                        <span className="count-badge">
+                          {classStudentCount} HS
+                        </span>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
             </div>
           );
         })}
