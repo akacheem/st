@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { 
   FileText, 
   Star, 
-  CloudCheck, 
+  Cloud, 
   Printer, 
   Download, 
   Lock,
@@ -37,7 +37,7 @@ export default function Header({ docTitle, setDocTitle, onPrint, onExportExcel, 
               title="Đánh dấu sao"
             />
             <div className="saved-badge" title="Tất cả thay đổi đã được tự động lưu vào bộ nhớ trình duyệt">
-              <CloudCheck size={16} color="#5f6368" />
+              <Cloud size={16} color="#5f6368" />
               <span>Đã lưu tự động</span>
             </div>
           </div>
